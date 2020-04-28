@@ -8,5 +8,5 @@ public interface Calculavel {
 
 	BigDecimal subtrair(Object classe);
 
-	BigDecimal total(Object classe);
+	BigDecimal totalizar(Object classe);
 }
