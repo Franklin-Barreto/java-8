@@ -21,6 +21,14 @@ public class CalculadorDeClasses implements Calculavel {
 		return calcular(classe, Subtrair.class);
 	}
 
+	@Override
+	public BigDecimal totalizar(Object classe) {
+		BigDecimal somar = somar(classe);
+		BigDecimal subtrair = subtrair(classe);
+		return somar.subtract(subtrair);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private BigDecimal calcular(Object classe, Class anotacao) {
 		Field[] fields = classe.getClass().getDeclaredFields();
 		BigDecimal valor = BigDecimal.ZERO;
@@ -42,13 +50,6 @@ public class CalculadorDeClasses implements Calculavel {
 			}
 		}
 		return valor;
-	}
-
-	@Override
-	public BigDecimal totalizar(Object classe) {
-		BigDecimal somar = somar(classe);
-		BigDecimal subtrair = subtrair(classe);
-		return somar.subtract(subtrair);
 	}
 
 }
