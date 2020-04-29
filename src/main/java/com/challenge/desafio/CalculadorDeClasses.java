@@ -1,7 +1,9 @@
 package com.challenge.desafio;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import com.challenge.annotation.Somar;
 import com.challenge.annotation.Subtrair;
@@ -10,46 +12,61 @@ import com.challenge.interfaces.Calculavel;
 public class CalculadorDeClasses implements Calculavel {
 
 	@Override
-	public BigDecimal somar(Object classe) {
-		// TODO Auto-generated method stub
-		return calcular(classe, Somar.class);
+	public BigDecimal somar(Object classe) throws IllegalAccessException {
+		return calcularStream(classe, Somar.class);
 	}
 
 	@Override
-	public BigDecimal subtrair(Object classe) {
-		// TODO Auto-generated method stub
-		return calcular(classe, Subtrair.class);
+	public BigDecimal subtrair(Object classe) throws IllegalAccessException {
+		return calcularStream(classe, Subtrair.class);
 	}
 
 	@Override
-	public BigDecimal totalizar(Object classe) {
-		BigDecimal somar = somar(classe);
-		BigDecimal subtrair = subtrair(classe);
-		return somar.subtract(subtrair);
+	public BigDecimal totalizar(Object classe) throws IllegalAccessException {
+		return somar(classe).subtract(subtrair(classe));
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private BigDecimal calcular(Object classe, Class anotacao) {
-		Field[] fields = classe.getClass().getDeclaredFields();
-		BigDecimal valor = BigDecimal.ZERO;
-		for (Field field : fields) {
+	public BigDecimal calcularStream(Object obj, Class<? extends Annotation> anotacao) {
+		Field[] fields = obj.getClass().getDeclaredFields();
+
+		return Arrays.stream(fields).filter(f -> f.isAnnotationPresent(anotacao)).map(f -> obterValor(f, obj))
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+	
+	private BigDecimal calcularForeach(Object classe, Class<? extends Annotation> anotacao) {
+	Field[] fields = classe.getClass().getDeclaredFields();
+	BigDecimal valor = BigDecimal.ZERO;
+	for (Field field : fields) {
+
+		if (field.getAnnotation(anotacao) != null) {
+			field.setAccessible(true);
 			try {
-				if (field.getAnnotation(anotacao) != null) {
-					field.setAccessible(true);
-					if (field.getGenericType().equals(BigDecimal.class) && field.get(classe) != null) {
-						valor = valor.add((BigDecimal) field.get(classe));
-					}
+				if (field.getGenericType().equals(BigDecimal.class) && field.get(classe) != null) {
+					valor = valor.add((BigDecimal) field.get(classe));
 				}
-
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
+			} catch (IllegalArgumentException | IllegalAccessException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		return valor;
+
+	}
+	return valor;
+}
+	
+	
+
+	private BigDecimal obterValor(Field f, Object obj) {
+
+		if (BigDecimal.class.isAssignableFrom((f.getType()))) {
+			try {
+				f.setAccessible(true);
+				return (BigDecimal) f.get(obj);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+		return BigDecimal.ZERO;
 	}
 
 }
