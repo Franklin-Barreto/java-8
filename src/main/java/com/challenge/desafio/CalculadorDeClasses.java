@@ -18,7 +18,7 @@ public class CalculadorDeClasses implements Calculavel {
 
 	@Override
 	public BigDecimal subtrair(Object classe) throws IllegalAccessException {
-		return calcularStream(classe, Subtrair.class);
+		return calcularForeach(classe, Subtrair.class);
 	}
 
 	@Override
@@ -32,41 +32,38 @@ public class CalculadorDeClasses implements Calculavel {
 		return Arrays.stream(fields).filter(f -> f.isAnnotationPresent(anotacao)).map(f -> obterValor(f, obj))
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
 	}
-	
-	private BigDecimal calcularForeach(Object classe, Class<? extends Annotation> anotacao) {
-	Field[] fields = classe.getClass().getDeclaredFields();
-	BigDecimal valor = BigDecimal.ZERO;
-	for (Field field : fields) {
-
-		if (field.getAnnotation(anotacao) != null) {
-			field.setAccessible(true);
-			try {
-				if (field.getGenericType().equals(BigDecimal.class) && field.get(classe) != null) {
-					valor = valor.add((BigDecimal) field.get(classe));
-				}
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
-	}
-	return valor;
-}
-	
-	
 
 	private BigDecimal obterValor(Field f, Object obj) {
 
-		if (BigDecimal.class.isAssignableFrom((f.getType()))) {
-			try {
-				f.setAccessible(true);
+		try {
+			f.setAccessible(true);
+			if (f.getType().equals(BigDecimal.class) && f.get(obj) != null) {
 				return (BigDecimal) f.get(obj);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
 			}
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
 		}
 		return BigDecimal.ZERO;
+	}
+
+	private BigDecimal calcularForeach(Object classe, Class<? extends Annotation> anotacao) {
+		Field[] fields = classe.getClass().getDeclaredFields();
+		BigDecimal valor = BigDecimal.ZERO;
+		for (Field field : fields) {
+
+			if (field.getAnnotation(anotacao) != null) {
+				field.setAccessible(true);
+				try {
+					if (field.getGenericType().equals(BigDecimal.class) && field.get(classe) != null) {
+						valor = valor.add((BigDecimal) field.get(classe));
+					}
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
+			}
+
+		}
+		return valor;
 	}
 
 }
